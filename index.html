@@ -25,14 +25,14 @@ body { margin:0; padding:0;}
 }
 
 #menu {
-    position: relative;
-    padding: 5px 20px ;
-    margin: 0 0;
-    background: #eeeeee;
-    box-shadow: 0px 0px 0px 0px #eeeeee;
-    font-family: 'Open Sans', sans-serif;
-    min-height: 30px;
-    //max-width: 350px;
+  position: relative;
+  padding: 5px 20px ;
+  margin: 0 0;
+  background: #eeeeee;
+  box-shadow: 0px 0px 0px 0px #eeeeee;
+  font-family: 'Open Sans', sans-serif;
+  min-height: 30px;
+  //max-width: 350px;
 }
 button.local {
   display: block;
@@ -168,8 +168,6 @@ button.small {
 
 <script>
 
-const root = "https://ppmap.github.io/pptest2";
-
 /*************************************************/
 /*Mapbox 関係設定                                */
 /*************************************************/
@@ -259,15 +257,10 @@ const refleshAll = () => {
   const inputValues = getInputValues();
   console.log(inputValues);
   
-  //レイヤへの処理
-  map.setFilter('mylayer', makeFilter());
-  console.log(map.getLayer('mylayer'));
+  //レイヤへのFilterを変更（sub含めて全て）
+  changeAllStyleFilters();
+  
 }
-
-
-/*************************************************/
-/*地図読み込み時の挙動 関係設定                  */
-/*************************************************/
 
 const makeFilter = () => {
   
@@ -281,23 +274,43 @@ const makeFilter = () => {
   ];
   return filter;
   
-
 }
+
+const changeAllStyleFilters = () =>{
+  
+  //レイヤへの処理（subも含めて全レイヤへ）
+  map.setFilter('my-main-layer', makeFilter());
+  map.setFilter('my-sub01-layer', makeFilter());
+  map.setFilter('my-sub02-layer', makeFilter());
+}
+
+/*************************************************/
+/*地図読み込み時の挙動 関係設定                  */
+/*************************************************/
 
 map.on('load', () => {
   
+  map.addLayer({
+    'id': 'overlay',
+    'type': 'background',
+    'paint': {
+      'background-opacity':0 
+    }
+  });
   
-  map.addSource('mysource', {
+  map.addSource('my-source', {
     type: 'vector',
     tiles: ['https://ppmap.github.io/pptest2/xyz/photo/{z}/{x}/{y}.pbf'],
     minzoom: 6,
-    maxzoom: 11
+    maxzoom: 11,
+    attribution: "地図・空中写真閲覧サービス"
   });
   
+  //メインのレイヤ（クリック時の情報取得などにも利用）
   map.addLayer({
-    'id': 'mylayer',
+    'id': 'my-main-layer',
     'type': 'circle',
-    'source': 'mysource',
+    'source': 'my-source',
     'minzoom': 11,
     'maxzoom': 22,
     'filter': makeFilter(),
@@ -317,6 +330,57 @@ map.on('load', () => {
     'source-layer': 'single'
   });
   
+  //以下は補助用のレイヤ
+  map.addLayer({
+    'id': 'my-sub01-layer',
+    'type': 'symbol',
+    'source': 'my-source',
+    'minzoom': 13,
+    'maxzoom': 22,
+    'filter': makeFilter(),
+    'layout': {
+      'text-field': [
+        "case",
+        [">", ["to-number", ["slice", ["get", "date"], 0, 4]], 1900],
+        ["concat", "'", ["slice", ["get", "date"], 2, 4] ],
+        "?"
+      ],
+      'text-size': 12,
+      'text-variable-anchor': ["left", "top", "right", "bottom", "center"],
+      'text-font': ["NotoSansCJKjp-Regular"],
+      'text-allow-overlap': false,
+      'visibility': 'visible'
+    },
+    'paint': {
+      'text-color': ['rgba', 255, 0, 0, 1],
+      'text-halo-color': ['rgba', 255,255,255,1],
+      'text-halo-width': 2
+    },
+    'source-layer': 'single'
+  });
+    
+  map.addLayer({
+    'id': 'my-sub02-layer',
+    'type': 'circle',
+    'source': 'my-source',
+    'minzoom': 6,
+    'maxzoom': 11,
+    'filter': makeFilter(),
+    'layout': {
+      'visibility': 'visible'
+    },
+    'paint': {
+      'circle-radius': [
+        "interpolate", ["linear"], ["zoom"],
+        11,8,
+        15,12
+      ],
+      'circle-color': ['rgba', 255, 0, 0, 0.5],
+      'circle-stroke-color': ['rgba', 255,255,255,1],
+      'circle-stroke-width': 2
+    },
+    'source-layer': 'cluster'
+  });
   
   refleshAll();
   
@@ -327,15 +391,15 @@ map.on('load', () => {
 /*地図クリック時の挙動 関係設定                  */
 /*************************************************/
 
-//ポップアップ表示
+//ポップアップ表示 -------------------------------
 const popup = new mapboxgl.Popup();
 map.on('click', function(e) {
   
-  //初期化 -----------------------------------------
+  //初期化
   popup.remove();
   
-  //レンダリングされた地物を取得 -----------------------------------------
-  const targetLayers = ['mylayer'];
+  //レンダリングされた地物を取得
+  const targetLayers = ['my-main-layer'];
   const features = map.queryRenderedFeatures(e.point,{layers: targetLayers});
   
   if (!features.length) {
@@ -345,7 +409,7 @@ map.on('click', function(e) {
   
   const feature = features[0]; //一番上のものだけ表示
   
-  //ポップアップ表示処理 ---------------------------------------------
+  //ポップアップ表示処理
   let htmlString = ""; //ポップアップ
   let featureProperties = "<table>";
   for(name in feature.properties){
@@ -364,7 +428,7 @@ map.on('click', function(e) {
     .addTo(map);
 });
 
-//選択リスト追加
+//選択リスト追加 ----------------------------------
 const myList = {};
 const clearList = () => { 
   for(id in myList){
@@ -372,6 +436,7 @@ const clearList = () => {
     selectedRefleshFeatures();
   }
 }
+
 const selectedRefleshFeatures = () => {
   
   const selectedIdList = [];
@@ -384,11 +449,11 @@ const selectedRefleshFeatures = () => {
     ["literal", selectedIdList]
   ];
   
-  if(!map.getLayer('myselectedlayer')){
+  if(!map.getLayer('my-selected-layer')){
     map.addLayer({
-      'id': 'myselectedlayer',
+      'id': 'my-selected-layer',
       'type': 'circle',
-      'source': 'mysource',
+      'source': 'my-source',
       'minzoom': 6,
       'maxzoom': 22,
       'filter': filter,
@@ -406,16 +471,16 @@ const selectedRefleshFeatures = () => {
         'circle-stroke-width': 6
       },
       'source-layer': 'single'
-    });
+    }, 'overlay');
   }else{
-    map.setFilter('myselectedlayer', filter)
+    map.setFilter('my-selected-layer', filter)
   }
   
 }
 
 map.on('click', function(e) {
-  //レンダリングされた地物を取得 -----------------------------------------
-  const targetLayers = ['mylayer'];
+  //レンダリングされた地物を取得
+  const targetLayers = ['my-main-layer'];
   const features = map.queryRenderedFeatures(e.point,{layers: targetLayers});
   
   if (!features.length) {
@@ -436,8 +501,7 @@ map.on('click', function(e) {
       selectedRefleshFeatures();
     }
   }
-    
-  
+
 });
 
 
@@ -455,7 +519,11 @@ const openOverlayPage = () =>{
   for(id in myList){
     const f = myList[id];
     const prop = f.properties;
-    listHtml = listHtml + `<li>${prop.ID} | ${prop.scale}</li>`;
+    let propHtml = "| ";
+    for(name in prop){
+      propHtml = propHtml + `${prop[name]}` + " | ";
+    }
+    listHtml = listHtml + "<li>" + propHtml + "</li>";
   };
   listEle.innerHTML = "<ul>" + listHtml + "</ul>";
   
