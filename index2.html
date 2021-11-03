@@ -475,24 +475,12 @@ const showFilterSetting = () => {
 const getInputValues = () => {
   
   //選択肢をまとめて取得する
+  const res = {}
   
-  //選択肢
-  const select_01 = document.question["select_01"] ? document.question["select_01"].value : "";
-  const select_02 = document.question["select_02"] ? document.question["select_02"].value : "";
-  
-  //スライダー
-  const slider_01 = document.question["slider_01"] ? document.question["slider_01"].value : "";
-  const slider_02 = document.question["slider_02"] ? document.question["slider_02"].value : "";
-  if(document.getElementById("slider_name_01")) document.getElementById("slider_name_01").innerText = slider_01;
-  if(document.getElementById("slider_name_02")) document.getElementById("slider_name_02").innerText = slider_02;
-  
-  //結果の返却
-  const res = {
-    "select_01": select_01,
-    "select_02": select_02,
-    "slider_01": slider_01,
-    "slider_02": slider_02
-  }
+  inputSetting.forEach( s => {
+    const id = s.id;
+    res[id] = document.question[id] ? document.question[id].value : "";
+  });
   
   return res;
   
@@ -547,6 +535,7 @@ const overlayInfo = {
   overlayMainLayerIdList: [],
   overlayAllLayerIdList: [] //selectは除く
 };
+
 
 map.on('load', () => {
   
