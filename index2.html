@@ -87,6 +87,14 @@ button.small {
   padding: 5px 20px;
 }
 
+table.popup-table {
+  //border-collapse: collapse;
+  border-top: solid 1px;
+  border-bottom: solid 1px;
+  margin-top: 5px;
+  width: 100%;
+}
+
 
 </style>
 <script>
@@ -588,12 +596,12 @@ map.on('load', () => {
 const makePopupHtml = (prop) => {
   
   let htmlString = ""; //ポップアップ
-  let featureProperties = "<table>";
+  let featureProperties = "";
   for(name in prop){
     featureProperties = featureProperties + "<tr><td style='vertical-align:top; color:#555555;'>" + name + "</td>"
                       + "<td style='color:#000000;'>" + prop[name] + "</td></tr>";
   }
-  htmlString = htmlString + "</table>" + featureProperties;
+  htmlString = htmlString + "<table class='popup-table'>" + featureProperties + "</table>";
   
   return htmlString;
   
@@ -614,10 +622,13 @@ map.on('click', function(e) {
     return;
   }
   
-  const feature = features[0]; //一番上のものだけ表示
-  
   //ポップアップ表示処理
-  let htmlString = makePopupHtml(feature.properties);
+  let htmlString = "";
+  features.forEach( feature => {
+    htmlString = htmlString + makePopupHtml(feature.properties);
+    console.log(feature.properties);
+  });
+  
   if (!htmlString || htmlString == "") {
     popup.remove();
     return;
@@ -690,7 +701,7 @@ map.on('click', function(e) {
     const sourceId = feature.source;
     const keyName = overlayInfo.overlayKeyNames[sourceId];
     
-   
+    
     //選択された地物情報をリストに追加
     if(feature.properties[keyName]){
       const id = feature.properties[keyName];
@@ -718,9 +729,8 @@ const makeListHtml = (myList) => {
 
   let listHtml = "";
   for(sourceId in myList){
-    const myStList = myList[sourceId];
-    for(id in myStList){
-      const f = myStList[id];
+    for(id in myList[sourceId]){
+      const f = myList[sourceId][id];
       const prop = f.properties;
       let propHtml = "| ";
       for(name in prop){
