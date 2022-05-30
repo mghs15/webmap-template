@@ -567,9 +567,11 @@ const makeFilter = () => {
     [">=", ["get", "scale"], +inputValues["select_01"] ],
     ["<=", ["get", "scale"], +inputValues["select_02"] ],
     [">=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_01"] ],
-    ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ],
-    ["in", inputValues["text_01"], ["coalesce", ["get", "referenceNumber"], ""] ]
+    ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ]
   ];
+  if(inputValues["text_01"]){
+    filter.push(["in", inputValues["text_01"], ["coalesce", ["get", "referenceNumber"], ""] ]);
+  }  
   return filter;
   
 }
