@@ -152,6 +152,14 @@ const inputSetting = [
     "max": 2022,
     "default": 2022,
     "newline": true
+  },
+  {
+    "id": "text_01",
+    "type": "text",
+    "title": "文字フィルタ",
+    "size": 20,
+    "default": "",
+    "newline": true
   }
 ];
 
@@ -389,7 +397,6 @@ const createSlider = s => {
   formArea.appendChild(slider);  
 }
 
-
 const createSelector = s => {
 
   const formArea = document.getElementById("question");
@@ -408,6 +415,21 @@ const createSelector = s => {
   select.addEventListener("change", () => {refleshAll();} );
   formArea.appendChild(select);  
 
+}
+
+const createTextInput = s => {
+  
+  const formArea = document.getElementById("question");
+  
+  const input = document.createElement("input");
+  input.setAttribute("type", "text");
+  input.setAttribute("id", s.id);
+  input.setAttribute("name", s.id);
+  input.setAttribute("size", s.size);
+  input.setAttribute("value", s.default);
+  
+  input.addEventListener("change", () => {refleshAll();} );
+  formArea.appendChild(input);  
 }
 
 inputSetting.forEach( s => {
@@ -430,8 +452,10 @@ inputSetting.forEach( s => {
     case "select":
       createSelector(s);
       break;
+    case "text":
+      createTextInput(s);
+      break;
   }
-  
   
 });
 
@@ -449,7 +473,7 @@ for( source in overlayStyle.sources){
   formAreaSelectOverlay.appendChild(input);  
   
   const title = document.createElement("span");
-  title .innerText = overlayStyle.sources[source].metadata.title ? overlayStyle.sources[source].metadata.title : source;
+  title.innerText = overlayStyle.sources[source].metadata.title ? overlayStyle.sources[source].metadata.title : source;
   formAreaSelectOverlay.appendChild(title);
 }
 
@@ -543,7 +567,8 @@ const makeFilter = () => {
     [">=", ["get", "scale"], +inputValues["select_01"] ],
     ["<=", ["get", "scale"], +inputValues["select_02"] ],
     [">=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_01"] ],
-    ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ]
+    ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ],
+    ["in", inputValues["text_01"], ["get", "referenceNumber"] ]
   ];
   return filter;
   
