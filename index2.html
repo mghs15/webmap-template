@@ -568,7 +568,7 @@ const makeFilter = () => {
     ["<=", ["get", "scale"], +inputValues["select_02"] ],
     [">=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_01"] ],
     ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ],
-    ["in", inputValues["text_01"], ["coalesce" ["get", "referenceNumber"], ""] ]
+    ["in", inputValues["text_01"], ["coalesce", ["get", "referenceNumber"], ""] ]
   ];
   return filter;
   
