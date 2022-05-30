@@ -12,7 +12,8 @@
 ### 設定
 index2.htmlでは変更を想定する部分をある程度独立させた。
 * GUIによる入力条件用の設定（JSON）
-* Mapbox Style Spec形式の上乗せデータ表示設定（metadata属性を用いて拡張）（JSON）
+* Mapbox Style Spec形式の上乗せデータ表示設定（sourceとlayer。どちらもmetadata属性を用いて拡張）（JSON）
+* 入力条件変更時（JavaScript関数、refleshAll()）
 * 入力条件に対するフィルタリング条件式の生成（JavaScript関数、makeFilter()）
 * ポップアップの表示内容（JavaScript関数、makePopupHtml()）
 * 選択地物リストの表示内容（JavaScript関数、makeListHtml()）
