@@ -658,6 +658,14 @@ map.on('load', () => {
     
   });
   
+  map.addLayer({
+    'id': 'overlay-highlight',
+    'type': 'background',
+    'paint': {
+      'background-opacity':0 
+    }
+  });
+  
   refleshAll();
   
 });
@@ -752,7 +760,7 @@ const refleshSelectedFeatures = (sourceId) => {
         layer.id = selectedLayerId;
         layer.filter = filter;
         console.log(selectedLayerId);
-        map.addLayer(layer, 'overlay');
+        map.addLayer(layer, 'overlay-highlight');
       }
     });
     
