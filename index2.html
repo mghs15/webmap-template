@@ -517,7 +517,7 @@ const showFilterSetting = () => {
     element.style.display = "none";
     document.getElementById("showFilterSettingMode").innerText = "▲詳細設定を開く";
   }else{ //開く作業
-    element.style.display = "";
+    element.style.display = "block";
     document.getElementById("showFilterSettingMode").innerText = "▼詳細設定を閉じる";
   }
   
@@ -677,6 +677,13 @@ map.on('load', () => {
 /*地図クリック時の挙動 関係設定                  */
 /*************************************************/
 
+map.on('click', (e) => {
+  openPopupFunc(e);
+  orderListFunc(e);
+});
+
+
+
 //ポップアップ表示 -------------------------------
 
 const makePopupHtml = (prop) => {
@@ -693,20 +700,23 @@ const makePopupHtml = (prop) => {
   
 }
 
-const popup = new mapboxgl.Popup();
-map.on('click', function(e) {
-  
+const popup = new mapboxgl.Popup({
+  closeOnClick: false,
+});
+
+
+const openPopupFunc = (e) => {
+
   //初期化
   popup.remove();
   
   //レンダリングされた地物を取得
   const targetLayers = overlayInfo.overlayMainLayerIdList;
-  const features = map.queryRenderedFeatures(e.point,{layers: targetLayers});
+  const features = map.queryRenderedFeatures(e.point, {layers: targetLayers});
   
-  if (!features.length) {
-    popup.remove();
+  if(!features.length) {
     return;
-  }
+  } 
   
   //ポップアップ表示処理
   let htmlString = "";
@@ -715,15 +725,15 @@ map.on('click', function(e) {
     console.log(feature.properties);
   });
   
-  if (!htmlString || htmlString == "") {
-    popup.remove();
+  if(!htmlString || htmlString == "") {
     return;
   }
   
   popup.setLngLat([ e.lngLat.lng, e.lngLat.lat ])
     .setHTML(htmlString)
     .addTo(map);
-});
+    
+}
 
 //選択リスト追加 ----------------------------------
 const myList = {};
@@ -739,7 +749,7 @@ const clearList = () => {
 const refleshSelectedFeatures = (sourceId) => {
   
   const selectedIdList = [];
-  for( id in myList[sourceId]){
+  for(id in myList[sourceId]){
     selectedIdList.push(id);
   }
   
@@ -773,13 +783,13 @@ const refleshSelectedFeatures = (sourceId) => {
   
 }
 
-map.on('click', function(e) {
+const orderListFunc = (e) => {
+
   //レンダリングされた地物を取得
   const targetLayers = overlayInfo.overlayMainLayerIdList;
-  const features = map.queryRenderedFeatures(e.point,{layers: targetLayers});
+  const features = map.queryRenderedFeatures(e.point, {layers: targetLayers});
   
-  if (!features.length) {
-    popup.remove();
+  if(!features.length) {
     return;
   }
   
@@ -791,7 +801,7 @@ map.on('click', function(e) {
     //選択された地物情報をリストに追加
     if(feature.properties[keyName]){
       const id = feature.properties[keyName];
-      if(!myList[sourceId]) myList[sourceId] = {}
+      if(!myList[sourceId]) myList[sourceId] = {};
       
       if(!myList[sourceId][id]){
         myList[sourceId][id] = feature;
@@ -799,11 +809,12 @@ map.on('click', function(e) {
       }else{
         delete myList[sourceId][id];
         refleshSelectedFeatures(sourceId);
+        if(popup) popup.remove();
       }
     }
   });
 
-});
+}
 
 
 
