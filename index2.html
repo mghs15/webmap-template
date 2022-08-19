@@ -355,8 +355,8 @@ const overlayStyle = {
 
   <button type="button" class="local" onclick="showFilterSetting()" ><span id="showFilterSettingMode">▼詳細設定を閉じる</span></button>
   <div id='aco' name='aco' style="display:;">
-  <form name="selectOverlay" id="selectOverlay"></form>
-  <form name="question" id="question"></form>
+  <div id="selectOverlay"></div>
+  <div id="question"></div>
   
   <button type="button" class="small" onclick="openOverlayPage()" ><span>リストを表示する</span></button>
   <button type="button" class="small" onclick="clearList()" ><span>選択したリストをクリア</span></button>
@@ -537,7 +537,7 @@ const getInputValues = () => {
   
   inputSetting.forEach( s => {
     const id = s.id;
-    res[id] = document.question[id] ? document.question[id].value : "";
+    res[id] = document.getElementById(id).value || "";
   });
   
   return res;
