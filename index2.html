@@ -60,11 +60,11 @@ button.small {
 }
 
 #slider_01 {
-  width: 80%;
+  //width: 80%;
 }
 
 #slider_02 {
-  width: 80%;
+  //width: 80%;
 }
 
 #note {
@@ -102,33 +102,67 @@ table.popup-table {
 <script>
 const inputSetting = [
   {
+    "id": "select_01",
+    "type": "select",
+    "title": "選択肢１",
+    "list": {
+      "--": "0",
+      "1/5000": "5000",
+      "1/10000": "10000",
+      "1/20000": "20000",
+      "1/25000": "25000",
+      "1/50000": "50000",
+      "1/100000": "100000",
+      "1/200000": "200000",
+      "1/500000": "500000",
+      "1/1000000": "1000000",
+      "1/5000000": "5000000"
+    }
+  },
+  {
+    "id": "select_02",
+    "type": "select",
+    "title": "選択肢２",
+    "list": {
+      "--": "5000000",
+      "1/5000": "5000",
+      "1/10000": "10000",
+      "1/20000": "20000",
+      "1/25000": "25000",
+      "1/50000": "50000",
+      "1/100000": "100000",
+      "1/200000": "200000",
+      "1/500000": "500000",
+      "1/1000000": "1000000",
+      "1/5000000": "5000000"
+    }
+  },
+  {
+    "id": "slider_01",
+    "type": "slider",
+    "title": "スライダー１",
+    "min": 1945,
+    "max": 2022,
+    "default": 1945,
+    "newline": true
+  },
+  {
+    "id": "slider_02",
+    "type": "slider",
+    "title": "スライダー２",
+    "min": 1945,
+    "max": 2022,
+    "default": 2022,
+    "newline": true
+  },
+  {
     "id": "text_01",
     "type": "text",
     "title": "文字フィルタ",
     "size": 20,
     "default": "",
     "newline": true
-  },
-  {
-    "id": "slider_01",
-    "type": "slider",
-    "title": "年",
-    "min": 1950,
-    "max": 2022,
-    "default": 2022,
-    "newline": true
-  },
-  /*
-  {
-    "id": "slider_02",
-    "type": "slider",
-    "title": "年",
-    "min": 1950,
-    "max": 2022,
-    "default": 2022,
-    "newline": true
   }
-  */
 ];
 
 const overlayStyle = {
@@ -138,159 +172,59 @@ const overlayStyle = {
   "sources": {
     'my-source': {
       "metadata":{
-        "keyName": "N06_007", //選択リストに利用するKEYとなる属性値名,
-        "title": "高速道路"
+        "keyName": "ID", //選択リストに利用するKEYとなる属性値名,
+        "title": "点"
       },
       type: 'vector',
-      tiles: ['https://mghs15.github.io/transport_timeseries/xyz/expressway-ts/{z}/{x}/{y}.pbf'],
+      tiles: ['https://ppmap.github.io/pptest2/xyz/photo/{z}/{x}/{y}.pbf'],
       minzoom: 6,
-      maxzoom: 8,
-      attribution: "国土数値情報（高速道路時系列）"
+      maxzoom: 11,
+      attribution: "地図・空中写真閲覧サービス"
     },
     'my-source-2': {
       "metadata":{
-        "keyName": "N05_006", //選択リストに利用するKEYとなる属性値名,
-        "title": "鉄道路線"
+        "keyName": "referenceNumber", //選択リストに利用するKEYとなる属性値名
+        "title": "線"
       },
       type: 'vector',
-      tiles: ['https://mghs15.github.io/transport_timeseries/xyz/railway-ts/{z}/{x}/{y}.pbf'],
+      tiles: ['https://mghs15.github.io/photoPoint2courseLine/photo/{z}/{x}/{y}.pbf'],
       minzoom: 6,
-      maxzoom: 8,
-      attribution: "国土数値情報（鉄道時系列）"
-    },
-    'my-source-3': {
-      "metadata":{
-        "keyName": "N05_006", //選択リストに利用するKEYとなる属性値名,
-        "title": "鉄道駅"
-      },
-      type: 'vector',
-      tiles: ['https://mghs15.github.io/transport_timeseries/xyz/station-ts/{z}/{x}/{y}.pbf'],
-      minzoom: 6,
-      maxzoom: 8,
-      attribution: "国土数値情報（鉄道時系列）"
-    },
-    'my-source-4': {
-      "metadata":{
-        "keyName": "N08_019", //選択リストに利用するKEYとなる属性値名,
-        "title": "空港"
-      },
-      type: 'vector',
-      tiles: ['https://mghs15.github.io/transport_timeseries/xyz/airport-ts/{z}/{x}/{y}.pbf'],
-      minzoom: 6,
-      maxzoom: 8,
-      attribution: "国土数値情報（空港時系列）"
+      maxzoom: 10,
+      attribution: "地図・空中写真閲覧サービス"
     }
   },
   "layers": [
-    
-    //空港
-    {
-      'metadata': {
-        'isMainLayer': true
-      },
-      'id': 'mysub3-layer-4',
-      'type': 'fill',
-      'source': 'my-source-4',
-      'minzoom': 8,
-      'maxzoom': 22,
-      'layout': {
-        'visibility': 'visible'
-      },
-      'paint': {
-        'fill-color': ['rgb', 255, 255, 200],
-        'fill-opacity': 0.5,
-        'fill-outline-color': ['rgb', 255, 150, 100]
-      },
-      'source-layer': 'airport-area'
-    },
-    {
-      'metadata': {
-        'isMainLayer': true
-      },
-      'id': 'my-main-layer-4',
-      'type': 'circle',
-      'source': 'my-source-4',
-      'minzoom': 6,
-      'maxzoom': 10,
-      'layout': {
-        'visibility': 'visible'
-      },
-      'paint': {
-        'circle-color': ['rgb', 255, 150, 100],
-        'circle-radius': 8
-      },
-      'source-layer': 'airport-point'
-    },
-    {
-      'metadata': {
-        'isSelectedLayer': true
-      },
-      'id': 'mysub3-layer-4',
-      'type': 'fill',
-      'source': 'my-source-4',
-      'minzoom': 8,
-      'maxzoom': 22,
-      'layout': {
-        'visibility': 'visible'
-      },
-      'paint': {
-        'fill-color': ['rgb', 255, 200, 200],
-        'fill-opacity': 0.5,
-        'fill-outline-color': ['rgb', 255, 00, 00]
-      },
-      'source-layer': 'airport-area'
-    },
-    {
-      'id': 'my-sub2-layer-4',
-      'type': 'symbol',
-      'source': 'my-source-4',
-      'minzoom': 10,
-      'maxzoom': 22,
-      'layout': {
-        'text-field': [
-          "concat",
-          ["get", "N08_019"]
-        ],
-        'text-size': 12,
-        'text-font': ["NotoSansCJKjp-Regular"],
-        'text-allow-overlap': true,
-        'symbol-placement': "point",
-        'text-variable-anchor': ['right', 'bottom', 'left', 'top'],
-        'visibility': 'visible'
-      },
-      'paint': {
-        'text-color': ['rgb', 255, 150, 100],
-        'text-halo-color': ['rgba', 255,255,255,1],
-        'text-halo-width': 2
-      },
-      'source-layer': 'airport-point'
-    },
-    
-    //高速道路
     {
       'metadata': {
         'isMainLayer': true
       },
       'id': 'my-main-layer',
-      'type': 'line',
+      'type': 'circle',
       'source': 'my-source',
-      'minzoom': 6,
+      'minzoom': 11,
       'maxzoom': 22,
       'layout': {
         'visibility': 'visible'
       },
       'paint': {
-        'line-color': ['rgb', 0, 161, 0],
-        'line-width': 2
+        'circle-radius': [
+          "interpolate", ["linear"], ["zoom"],
+          11,4,
+          15,8
+        ],
+        'circle-color': ['rgb', 255, 0, 0],
+        'circle-opacity': 1,
+        'circle-stroke-color': ['rgba', 255, 255, 255,1],
+        'circle-stroke-width': 2
       },
-      'source-layer': 'expressway'
+      'source-layer': 'single'
     },
     {
       'metadata': {
         'isSelectedLayer': true
       },
-      'id': 'my-sub1-layer',
-      'type': 'line',
+      'id': 'my-selected-layer',
+      'type': 'circle',
       'source': 'my-source',
       'minzoom': 6,
       'maxzoom': 22,
@@ -298,151 +232,109 @@ const overlayStyle = {
         'visibility': 'visible'
       },
       'paint': {
-        'line-color': ['rgb', 255, 0, 0],
-        'line-opacity': 0.5,
-        'line-width': 4
+        'circle-radius': [
+          "interpolate", ["linear"], ["zoom"],
+          11,5,
+          15,9
+        ],
+        'circle-color': ['rgba', 255, 200, 200, 0],
+        'circle-stroke-color': ['rgba', 255,100,100,1],
+        'circle-stroke-width': 6
       },
-      'source-layer': 'expressway'
+      'source-layer': 'single'
+    },
+    {
+      'id': 'my-layer-01-sub-01',
+      'type': 'symbol',
+      'source': 'my-source',
+      'minzoom': 13,
+      'maxzoom': 22,
+      'layout': {
+        'text-field': [
+          "case",
+          [">", ["to-number", ["slice", ["get", "date"], 0, 4]], 1900],
+          ["concat", "'", ["slice", ["get", "date"], 2, 4] ],
+          "?"
+        ],
+        'text-size': 12,
+        'text-variable-anchor': ["left", "top", "right", "bottom", "center"],
+        'text-font': ["NotoSansCJKjp-Regular"],
+        'text-allow-overlap': false,
+        'visibility': 'visible'
+      },
+      'paint': {
+        'text-color': ['rgb', 255, 0, 0],
+        'text-halo-color': ['rgba', 255,255,255,1],
+        'text-halo-width': 2
+      },
+      'source-layer': 'single'
+    },
+    {
+      'id': 'my-layer-01-sub-02',
+      'type': 'circle',
+      'source': 'my-source',
+      'minzoom': 6,
+      'maxzoom': 11,
+      'layout': {
+        'visibility': 'visible'
+      },
+      'paint': {
+        'circle-radius': [
+          "interpolate", ["linear"], ["zoom"],
+          11,8,
+          15,12
+        ],
+        'circle-color': ['rgb', 255, 0, 0],
+        'circle-opacity': 0.5,
+        'circle-stroke-color': ['rgba', 255,255,255,1],
+        'circle-stroke-width': 2
+      },
+      'source-layer': 'cluster'
     },
     
-    //鉄道路線
     {
       'metadata': {
         'isMainLayer': true
       },
-      'id': 'my-main-layer-2',
+      'id': 'my-layer-02-main-01',
       'type': 'line',
       'source': 'my-source-2',
       'minzoom': 6,
-      'maxzoom': 22,
+      'maxzoom': 15,
       'layout': {
         'visibility': 'visible'
       },
       'paint': {
         'line-color': ['rgb', 100, 100, 255],
-        'line-width': 3
+        'line-opacity': [
+          "interpolate", ["linear"], ["zoom"],
+          11,0.5,
+          15,0
+        ],
+        'line-width': 4
       },
-      'source-layer': 'railway'
+      'source-layer': 'courseline'
     },
     {
       'metadata': {
         'isSelectedLayer': true
       },
-      'id': 'my-sub1-layer-2',
+      'id': 'my-layer-02-select-01',
       'type': 'line',
       'source': 'my-source-2',
       'minzoom': 6,
-      'maxzoom': 22,
+      'maxzoom': 15,
       'layout': {
         'visibility': 'visible'
       },
       'paint': {
-        'line-color': ['rgb', 255, 0, 0],
+        'line-color': ['rgb', 0, 0, 255],
         'line-opacity': 0.5,
-        'line-width': 4
+        'line-width': 8
       },
-      'source-layer': 'railway'
-    },
-    {
-      'id': 'my-sub2-layer-2',
-      'type': 'symbol',
-      'source': 'my-source-2',
-      'minzoom': 11,
-      'maxzoom': 22,
-      'layout': {
-        'text-field': [
-          "concat",
-          ["get", "N05_002"],
-          " - ",
-          ["get", "N05_003"]
-        ],
-        'text-size': 12,
-        'text-font': ["NotoSansCJKjp-Regular"],
-        'text-allow-overlap': false,
-        'symbol-placement': "line",
-        'visibility': 'visible'
-      },
-      'paint': {
-        'text-color': ['rgb', 100, 100, 255],
-        'text-halo-color': ['rgba', 255,255,255,1],
-        'text-halo-width': 2
-      },
-      'source-layer': 'railway'
-    },
-    
-    //鉄道駅
-    {
-      'metadata': {
-        'isMainLayer': true
-      },
-      'id': 'my-main-layer-3',
-      'type': 'circle',
-      'source': 'my-source-3',
-      'minzoom': 6,
-      'maxzoom': 22,
-      'layout': {
-        'visibility': 'visible'
-      },
-      'paint': {
-        'circle-color': ['rgb', 100, 100, 255],
-        'circle-radius': 4
-      },
-      'source-layer': 'railway'
-    },
-    {
-      'metadata': {
-        'isSelectedLayer': true
-      },
-      'id': 'my-sub1-layer-3',
-      'type': 'symbol',
-      'source': 'my-source-3',
-      'minzoom': 6,
-      'maxzoom': 22,
-      'layout': {
-        'text-field': [
-          "concat",
-          ["get", "N05_011"]
-        ],
-        'text-size': 12,
-        'text-font': ["NotoSansCJKjp-Regular"],
-        'text-allow-overlap': false,
-        'symbol-placement': "point",
-        'text-variable-anchor': ['right', 'bottom', 'left', 'top'],
-        'visibility': 'visible'
-      },
-      'paint': {
-        'text-color': ['rgba', 255,255,255,1],
-        'text-halo-color': ['rgb', 255, 0, 0],
-        'text-halo-width': 4
-      },
-      'source-layer': 'railway'
-    },
-    {
-      'id': 'my-sub2-layer-3',
-      'type': 'symbol',
-      'source': 'my-source-3',
-      'minzoom': 11,
-      'maxzoom': 22,
-      'layout': {
-        'text-field': [
-          "concat",
-          ["get", "N05_011"]
-        ],
-        'text-size': 12,
-        'text-font': ["NotoSansCJKjp-Regular"],
-        'text-allow-overlap': false,
-        'symbol-placement': "point",
-        'text-variable-anchor': ['right', 'bottom', 'left', 'top'],
-        'visibility': 'visible'
-      },
-      'paint': {
-        'text-color': ['rgb', 100, 100, 255],
-        'text-halo-color': ['rgba', 255,255,255,1],
-        'text-halo-width': 2
-      },
-      'source-layer': 'railway'
-    },
-    
+      'source-layer': 'courseline'
+    }
+
   ]
 };
 
@@ -456,7 +348,7 @@ const overlayStyle = {
 
 <div id='menutop'>
   <div id="note">
-    <span id="note_contents"></span>
+    <span>テストメッセージ</span>
   </div>
 
 <div id='menu'>
@@ -502,10 +394,10 @@ const createSlider = s => {
   slider.setAttribute("min", s.min);
   slider.setAttribute("max", s.max);
   slider.setAttribute("value", s.default);
+  
   slider.addEventListener("change", () => {refleshAll();} );
   formArea.appendChild(slider);  
 }
-
 
 const createSelector = s => {
 
@@ -542,7 +434,6 @@ const createTextInput = s => {
   formArea.appendChild(input);  
 }
 
-
 inputSetting.forEach( s => {
   //表示エリア取得
   const formArea = document.getElementById("question");
@@ -568,7 +459,6 @@ inputSetting.forEach( s => {
       break;
   }
   
-  
 });
 
 
@@ -585,7 +475,7 @@ for( source in overlayStyle.sources){
   formAreaSelectOverlay.appendChild(input);  
   
   const title = document.createElement("span");
-  title .innerText = overlayStyle.sources[source].metadata.title ? overlayStyle.sources[source].metadata.title : source;
+  title.innerText = overlayStyle.sources[source].metadata.title ? overlayStyle.sources[source].metadata.title : source;
   formAreaSelectOverlay.appendChild(title);
 }
 
@@ -601,7 +491,7 @@ const map = new mapboxgl.Map({
   minZoom: 6,
   maxZoom: 17.99,
   attributionControl: false,
-  clickTolerance: 10,
+  //clickTolerance: 10,
   localIdeographFontFamily: ['MS Gothic', 'Hiragino Kaku Gothic Pro', 'sans-serif']
 });
 
@@ -627,7 +517,7 @@ const showFilterSetting = () => {
     element.style.display = "none";
     document.getElementById("showFilterSettingMode").innerText = "▲詳細設定を開く";
   }else{ //開く作業
-    element.style.display = "";
+    element.style.display = "block";
     document.getElementById("showFilterSettingMode").innerText = "▼詳細設定を閉じる";
   }
   
@@ -643,7 +533,7 @@ const showFilterSetting = () => {
 const getInputValues = () => {
   
   //選択肢をまとめて取得する
-  const res = {}
+  const res = {};
   
   inputSetting.forEach( s => {
     const id = s.id;
@@ -674,86 +564,27 @@ const refleshAll = () => {
   //レイヤへのFilterを変更（sub含めて全て）
   changeAllStyleFilters();
   
-  document.getElementById("note_contents").innerText = `${inputValues["slider_01"]}年に存在した交通`;
-  
-  
 }
 
 const makeFilter = () => {
   
   const inputValues = getInputValues();
-  
-  /*
-  if(+inputValues["slider_02"] > 2021){
-    inputValues["slider_02"] = "10000";
-  }
-  */
-  
-  /*
-  //○年以降に開業し、●年以降も残っていた路線
   const filter = [
-    "any", 
-    ["all",
-      ["has", "N05_001"],
-      [">=", ["to-number", ["get", "N05_005b"]], +inputValues["slider_01"] ],
-      [">=", ["to-number", ["get", "N05_005e"]], +inputValues["slider_02"] ]
-    ],
-    ["all",
-      ["has", "N06_001"],
-      [">=", ["to-number", ["get", "N06_001"]], +inputValues["slider_01"] ],
-      [">=", ["to-number", ["get", "N06_003"]], +inputValues["slider_02"] ]
-    ]
-  ];*/
-  
-  //○年時点で存在した路線
-  let filter = [
-    "any", 
-    ["all",
-      ["has", "N05_001"],
-      ["any",
-        ["==", ["to-number", ["get", "N05_005b"]], 999 ],
-        ["<=", ["to-number", ["get", "N05_005b"]], +inputValues["slider_01"] ]
-      ],
-      [">=", ["to-number", ["get", "N05_005e"]], +inputValues["slider_01"] ]
-    ],
-    ["all",
-      ["has", "N06_001"],
-      ["<=", ["to-number", ["get", "N06_001"]], +inputValues["slider_01"] ],
-      [">=", ["to-number", ["get", "N06_003"]], +inputValues["slider_01"] ]
-    ],
-    ["all",
-      ["has", "N08_014"],
-      ["<=", ["to-number", ["get", "N08_014"]], +inputValues["slider_01"] ],
-      [">=", ["to-number", ["get", "N08_015"]], +inputValues["slider_01"] ]
-    ],
-    ["all",
-      ["has", "N08_022"],
-      ["<=", ["to-number", ["get", "N08_022"]], +inputValues["slider_01"] ],
-      [">=", ["to-number", ["get", "N08_023"]], +inputValues["slider_01"] ]
-    ]
+    "all",
+    [">=", ["get", "scale"], +inputValues["select_01"] ],
+    ["<=", ["get", "scale"], +inputValues["select_02"] ],
+    [">=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_01"] ],
+    ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ]
   ];
-  
   if(inputValues["text_01"]){
-    filter = [
-      "all",
-      filter,
-      ["any",
-        ["in", inputValues["text_01"], ["get", "N06_007"] ],
-        ["in", inputValues["text_01"], ["get", "N05_002"] ],
-        ["in", inputValues["text_01"], ["get", "N05_003"] ],
-        ["in", inputValues["text_01"], ["get", "N05_011"] ],
-        ["in", inputValues["text_01"], ["get", "N08_019"] ]
-      ]
-    ]
-  }
-  
-  console.log(filter);
-  
+    filter.push(["in", inputValues["text_01"], ["coalesce", ["get", "referenceNumber"], ""] ]);
+  }  
   return filter;
   
 }
 
 const changeAllStyleFilters = () =>{
+  
   //レイヤへの処理（選択用レイヤを除く全レイヤへ）
   overlayInfo.overlayAllLayerIdList.forEach( id => {
     map.setFilter(id, makeFilter());
@@ -857,23 +688,20 @@ map.on('click', (e) => {
 });
 
 
+
 //ポップアップ表示 -------------------------------
 
 const makePopupHtml = (feature) => {
   
   const prop = feature.properties
   
-  const fTitle = overlayStyle.sources[feature.source].metadata.title;
-  
-  let htmlString = `<div>${fTitle}</div>`; //ポップアップ
+  let htmlString = ""; //ポップアップ
   let featureProperties = "";
   for(name in prop){
-    featureProperties = featureProperties + "<tr>"
-                      + "<td style='vertical-align:top; color:#555555;'>" + name + "</td>"
+    featureProperties = featureProperties + "<tr><td style='vertical-align:top; color:#555555;'>" + name + "</td>"
                       + "<td style='color:#000000;'>" + prop[name] + "</td></tr>";
   }
-  
-  htmlString += "<table class='popup-table'>" + featureProperties + "</table>";
+  htmlString = htmlString + "<table class='popup-table'>" + featureProperties + "</table>";
   
   return htmlString;
   
@@ -885,13 +713,13 @@ const popup = new mapboxgl.Popup({
 
 
 const openPopupFunc = (e) => {
-  
+
   //初期化
   popup.remove();
   
   //レンダリングされた地物を取得
   const targetLayers = overlayInfo.overlayMainLayerIdList;
-  const sv = 3;
+  const sv = 5;
   const bb = [
     [e.point.x - sv, e.point.y - sv],
     [e.point.x + sv, e.point.y + sv]
@@ -905,7 +733,7 @@ const openPopupFunc = (e) => {
   //ポップアップ表示処理
   let htmlString = "";
   features.forEach( feature => {
-    htmlString += makePopupHtml(feature);
+    htmlString = htmlString + makePopupHtml(feature);
     console.log(feature.properties);
   });
   
@@ -971,7 +799,7 @@ const orderListFunc = (e) => {
 
   //レンダリングされた地物を取得
   const targetLayers = overlayInfo.overlayMainLayerIdList;
-  const sv = 3;
+  const sv = 5;
   const bb = [
     [e.point.x - sv, e.point.y - sv],
     [e.point.x + sv, e.point.y + sv]
@@ -998,6 +826,7 @@ const orderListFunc = (e) => {
       }else{
         delete myList[sourceId][id];
         refleshSelectedFeatures(sourceId);
+        if(popup) popup.remove();
       }
     }
   });
@@ -1029,19 +858,19 @@ const makeListHtml = (myList) => {
   return listHtml;
 }
 
-const openOverlayPage = () =>{
+const openOverlayPage = () => {
  
   const pageEle = document.getElementById("overlay-page");
   const listEle = document.getElementById("overlay-page-list");
   
   listEle.innerHTML = makeListHtml(myList);
   
-  pageEle.style.display = "block";
+  pageEle.style.display = "";
   console.log(myList);
  
 }
 
-const closeOverlayPage = () =>{
+const closeOverlayPage = () => {
  
   const pageEle = document.getElementById("overlay-page");
   pageEle.style.display = "none";
