@@ -533,7 +533,7 @@ const showFilterSetting = () => {
 const getInputValues = () => {
   
   //選択肢をまとめて取得する
-  const res = {}
+  const res = {};
   
   inputSetting.forEach( s => {
     const id = s.id;
@@ -717,7 +717,12 @@ const openPopupFunc = (e) => {
   
   //レンダリングされた地物を取得
   const targetLayers = overlayInfo.overlayMainLayerIdList;
-  const features = map.queryRenderedFeatures(e.point, {layers: targetLayers});
+  const sv = 5;
+  const bb = [
+    [e.point.x - sv, e.point.y - sv],
+    [e.point.x + sv, e.point.y + sv]
+  ];
+  const features = map.queryRenderedFeatures(bb, {layers: targetLayers});
   
   if(!features.length) {
     return;
@@ -792,7 +797,12 @@ const orderListFunc = (e) => {
 
   //レンダリングされた地物を取得
   const targetLayers = overlayInfo.overlayMainLayerIdList;
-  const features = map.queryRenderedFeatures(e.point, {layers: targetLayers});
+  const sv = 5;
+  const bb = [
+    [e.point.x - sv, e.point.y - sv],
+    [e.point.x + sv, e.point.y + sv]
+  ];
+  const features = map.queryRenderedFeatures(bb, {layers: targetLayers});
   
   if(!features.length) {
     return;
@@ -846,7 +856,7 @@ const makeListHtml = (myList) => {
   return listHtml;
 }
 
-const openOverlayPage = () =>{
+const openOverlayPage = () => {
  
   const pageEle = document.getElementById("overlay-page");
   const listEle = document.getElementById("overlay-page-list");
@@ -858,7 +868,7 @@ const openOverlayPage = () =>{
  
 }
 
-const closeOverlayPage = () =>{
+const closeOverlayPage = () => {
  
   const pageEle = document.getElementById("overlay-page");
   pageEle.style.display = "none";
