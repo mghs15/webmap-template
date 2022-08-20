@@ -691,7 +691,9 @@ map.on('click', (e) => {
 
 //ポップアップ表示 -------------------------------
 
-const makePopupHtml = (prop) => {
+const makePopupHtml = (feature) => {
+  
+  const prop = feature.properties
   
   let htmlString = ""; //ポップアップ
   let featureProperties = "";
@@ -731,7 +733,7 @@ const openPopupFunc = (e) => {
   //ポップアップ表示処理
   let htmlString = "";
   features.forEach( feature => {
-    htmlString = htmlString + makePopupHtml(feature.properties);
+    htmlString = htmlString + makePopupHtml(feature);
     console.log(feature.properties);
   });
   
