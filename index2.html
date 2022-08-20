@@ -354,12 +354,13 @@ const overlayStyle = {
 <div id='menu'>
 
   <button type="button" class="local" onclick="showFilterSetting()" ><span id="showFilterSettingMode">▼詳細設定を閉じる</span></button>
-  <div id='aco' name='aco' style="display:;">
+  <div id='aco' name='aco' style="display:block;">
   <div id="selectOverlay"></div>
   <div id="question"></div>
   
   <button type="button" class="small" onclick="openOverlayPage()" ><span>リストを表示する</span></button>
   <button type="button" class="small" onclick="clearList()" ><span>選択したリストをクリア</span></button>
+  <button type="button" class="small" id="switchPhotoRasterButton" ><span>地図/写真切り替え</span></button>
   
   </div><!-- aco -->
   
@@ -630,6 +631,24 @@ const overlayInfo = {
 
 map.on('load', () => {
   
+  map.addSource('gsi-raster-seamlessphoto', {
+    'type': 'raster',
+    'tiles': ['https://cyberjapandata.gsi.go.jp/xyz/' + 'seamlessphoto' + '/{z}/{x}/{y}.jpg' ],
+    'minzoom': 2,
+    'maxzoom': 18,
+    'tileSize': 256
+  });
+  
+  map.addLayer({
+    'id': 'gsi-raster-seamlessphoto',
+    'type': 'raster',
+    'source': 'gsi-raster-seamlessphoto',
+    'layout': {
+      'visibility': 'none'
+    },
+    'paint': {}
+  });
+  
   map.addLayer({
     'id': 'overlay',
     'type': 'background',
@@ -637,6 +656,21 @@ map.on('load', () => {
       'background-opacity':0 
     }
   });
+  
+  
+  const el = document.getElementById('switchPhotoRasterButton');
+  if(el){
+    el.addEventListener("click", () => {
+      const vis =  map.getLayoutProperty('gsi-raster-seamlessphoto', 'visibility');
+      
+      if(vis == "none"){
+        map.setLayoutProperty('gsi-raster-seamlessphoto', 'visibility', 'visible');
+      }else{
+        map.setLayoutProperty('gsi-raster-seamlessphoto', 'visibility', 'none');
+      }
+    });
+  }
+  
   
   
   //上乗せデータ用のsourceを順次追加
@@ -661,7 +695,7 @@ map.on('load', () => {
     //メインレイヤは別途取得
     if(layer.metadata && layer.metadata.isMainLayer) overlayInfo.overlayMainLayerIdList.push(layer.id);
 
-    console.log(`layer ${layer.id} を追加`);
+    console.log(`layer "${layer.id}" を追加`);
     
   });
   
