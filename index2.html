@@ -36,27 +36,32 @@ body { margin:0; padding:0;}
   //max-width: 350px;
   pointer-events: auto;
 }
+
 button.local {
-  display: block;
-  text-align:center;
+  display: block;  
+  position: relative;
+  left: 0px;
+  right: 0px;
+  text-align: center;
   background: #dddddd;
-  padding 0 0.5em 0 0.5em;
   border: solid 2px #ddd;
-  border-radius: 3px;
-  margin: 2.5px 0px 2.5px 0px;
+  border-radius: 4px;
+  width: 100%;
   line-height: 1.5em;
   font-size: 1em;
-  width: 100%;
+  cursor: pointer;
 }
+
 button.small {
   text-align:center;
   background: #dddddd;
-  padding 0 0.5em 0 0.5em;
+  padding: 0 0.5em 0 0.5em;
   border: solid 2px #aaa;
-  border-radius: 3px;
+  border-radius: 4px;
   margin: 2.5px 0px 2.5px 0px;
   line-height: 1.5em;
   font-size: 1em;
+  cursor: pointer;
 }
 
 #slider_01 {
@@ -79,14 +84,40 @@ button.small {
 
 
 #overlay-page {
+  display: grid;
+  grid-template-rows: 45px 1fr 45px;
+  grid-gap: 8px;
+  z-index: 100000;
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #EEEEEE;
-  z-index: 1000000;
-  padding: 5px 20px;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  margin: auto;
+  padding: 8px;
+  border-radius: 8px;
+  border: 2px solid #aaaaaa;
+  background-color: #eeeeee;
+}
+
+#overlay-page-title {
+  font-weight: bold;
+  text-align: center;
+}
+
+#overlay-page-header {
+  border-bottom: 1px solid #aaaaaa;
+  padding: 8px;
+}
+
+#overlay-page-footer {
+  border-top: 1px solid #aaaaaa;
+  padding: 8px;
+}
+
+#overlay-page-main {
+  padding: 8px;
+  overflow: auto;
 }
 
 table.popup-table {
@@ -372,9 +403,15 @@ const overlayStyle = {
 <!-------------------------------------------------------------------------->
 
 <div id='overlay-page' name='overlay-page' style="display:none;">
-  <div id="overlay-page-title">リスト</div>
-  <div id="overlay-page-list"></div>
-  <button type="button" class="local" onclick="closeOverlayPage()" ><span>地図に戻る</span></button>
+  <div id="overlay-page-header">
+    <div id="overlay-page-title">リスト</div>
+  </div>
+  <div id="overlay-page-main">
+    <div id="overlay-page-list"></div>
+  </div>
+  <div id="overlay-page-footer">
+    <button type="button" class="local" onclick="closeOverlayPage()" ><span>地図に戻る</span></button>
+  </div>
 </div>
 <!-------------------------------------------------------------------------->
 
