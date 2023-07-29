@@ -466,6 +466,7 @@ const createTextInput = s => {
   input.setAttribute("id", s.id);
   input.setAttribute("name", s.id);
   input.setAttribute("size", s.size);
+  input.setAttribute("placeholder", s.placeholder);
   input.setAttribute("value", s.default);
   
   input.addEventListener("change", () => {refleshAll();} );
@@ -513,7 +514,9 @@ for( source in overlayStyle.sources){
   formAreaSelectOverlay.appendChild(input);  
   
   const title = document.createElement("span");
-  title.innerText = overlayStyle.sources[source].metadata.title ? overlayStyle.sources[source].metadata.title : source;
+  // 本来、source には metadata を記載できないため、以下の処理を修正
+  title.innerText = overlayStyle.sources[source].metadata ? 
+    overlayStyle.sources[source].metadata.title : overlayStyle.metadata.source[source].title;
   formAreaSelectOverlay.appendChild(title);
 }
 
@@ -614,9 +617,16 @@ const makeFilter = () => {
     [">=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_01"] ],
     ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ]
   ];
+  
   if(inputValues["text_01"]){
-    filter.push(["in", inputValues["text_01"], ["coalesce", ["get", "referenceNumber"], ""] ]);
-  }  
+    const words = inputValues["text_01"].split(/(\s|　)/g);
+    console.log(words);
+    words.forEach( word => {
+      if(word.match(/(\s|　)/)) return;
+      filter.push(["in", word, ["coalesce", ["get", "name"], ""] ]);
+    });
+  }
+  
   return filter;
   
 }
@@ -714,7 +724,9 @@ map.on('load', () => {
   for( id in overlayStyle.sources){
     map.addSource(id, overlayStyle.sources[id]);
     overlayInfo.overlaySourceIdList.push(id);
-    overlayInfo.overlayKeyNames[id] = overlayStyle.sources[id].metadata.keyName;
+    // 本来、source には metadata を記載できないため、以下の処理を修正
+    overlayInfo.overlayKeyNames[id] = overlayStyle.sources[id].metadata ? 
+      overlayStyle.sources[id].metadata.keyName : overlayStyle.metadata.source[id].keyName;
     console.log(`source ${id} を追加`);
   }
   
