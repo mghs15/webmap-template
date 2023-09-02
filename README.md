@@ -14,15 +14,15 @@
 * GUI による入力条件用の設定（JSON）
 * Mapbox Style Spec 形式の上乗せデータ表示設定（`metadata`、`sources`、`layers`）（JSON）
   * `metadata`では、各 `sources` ごとに、各地物を識別する ID となる属性値を記述する。
-  * `layers`では、データの取得を行うスタイルレイヤ（`isMainLayer`:`true`）と選択時用のスタイルレイヤ（`isSelectedLayer`:`true`）を設定し、メタデータに記述する。
+  * `layers`では、データの取得を行うスタイルレイヤ（`isMainLayer`:`true`）と選択時用のスタイルレイヤ（`isSelectedLayer`:`true`）を設定し、メタデータ（レイヤ設定内の　`metadata`）に記述する。
 * 入力条件変更時の挙動（JavaScript 関数、`refleshAll()`）
 * 入力条件に対するフィルタリング条件式（JavaScript 関数、`makeFilter()`）
 * ポップアップの表示内容（JavaScript 関数、`makePopupHtml()`）
 * 選択地物リストの表示内容（JavaScript 関数、`makeListHtml()`）
 
 ### 前提
-想定しているベクトルタイルは、以下の通り。
-  * 各地物は ID となる属性を持っている（上乗せ用 style.json の `sources` で指定時にメタデータに記載）
+想定している上乗せデータ（ベクトルタイル又は GeoJSON）は、以下の通り。
+  * 各地物は ID となる属性を持っている（→上述の上乗せ用 style 設定 の `metadata` に記載）
 
 ## 感想
 * いろんなパターンに対応したテンプレを作るよりも、結局スクラッチした方が速そう。
