@@ -2,10 +2,11 @@
 <html>
 <head>
 <meta charset='utf-8' />
-<title>Web地図テンプレ</title>
+<title>Web Map</title>
 <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.13.2/mapbox-gl.js'></script>
-<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.13.2/mapbox-gl.css' rel='stylesheet' />
+<script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>
+<link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' />
+<script src='https://unpkg.com/pmtiles@2.5.0/dist/index.js'></script>
 <style>
 body { margin:0; padding:0;}
 
@@ -22,6 +23,7 @@ body { margin:0; padding:0;}
   width: 100%;
   bottom: 0;
   z-index: 99999;
+  pointer-events: none;
 }
 
 #menu {
@@ -33,28 +35,44 @@ body { margin:0; padding:0;}
   font-family: 'Open Sans', sans-serif;
   min-height: 30px;
   //max-width: 350px;
+  pointer-events: auto;
 }
+
+#selectOverlay div{
+  display: inline-block;
+  margin: 0px 8px 0px 0px;
+}
+
+#question div{
+  display: inline-block;
+  margin: 0px 8px 0px 0px;
+}
+
 button.local {
-  display: block;
-  text-align:center;
+  display: block;  
+  position: relative;
+  left: 0px;
+  right: 0px;
+  text-align: center;
   background: #dddddd;
-  padding 0 0.5em 0 0.5em;
   border: solid 2px #ddd;
-  border-radius: 3px;
-  margin: 2.5px 0px 2.5px 0px;
+  border-radius: 4px;
+  width: 100%;
   line-height: 1.5em;
   font-size: 1em;
-  width: 100%;
+  cursor: pointer;
 }
+
 button.small {
   text-align:center;
   background: #dddddd;
-  padding 0 0.5em 0 0.5em;
+  padding: 0 0.5em 0 0.5em;
   border: solid 2px #aaa;
-  border-radius: 3px;
+  border-radius: 4px;
   margin: 2.5px 0px 2.5px 0px;
   line-height: 1.5em;
   font-size: 1em;
+  cursor: pointer;
 }
 
 #slider_01 {
@@ -77,18 +95,298 @@ button.small {
 
 
 #overlay-page {
+  display: grid;
+  grid-template-rows: 45px 1fr 45px;
+  grid-gap: 8px;
+  z-index: 100000;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  margin: auto;
+  padding: 8px;
+  border-radius: 8px;
+  border: 2px solid #aaaaaa;
+  background-color: #eeeeee;
+}
+
+#overlay-page-title {
+  font-weight: bold;
+  text-align: center;
+}
+
+#overlay-page-header {
+  border-bottom: 1px solid #aaaaaa;
+  padding: 8px;
+}
+
+#overlay-page-footer {
+  border-top: 1px solid #aaaaaa;
+  padding: 8px;
+}
+
+#overlay-page-main {
+  padding: 8px;
+  overflow: auto;
+}
+
+table.popup-table {
+  //border-collapse: collapse;
+  border-top: solid 1px;
+  border-bottom: solid 1px;
+  margin-top: 5px;
   width: 100%;
-  height: 100%;
-  background: #EEEEEE;
-  z-index: 1000000;
-  padding: 5px 20px;
 }
 
 
 </style>
+<script>
+const inputSetting = [
+  {
+    "id": "select_01",
+    "type": "select",
+    "title": "選択肢１",
+    "list": {
+      "--": "0",
+      "1/5000": "5000",
+      "1/10000": "10000",
+      "1/20000": "20000",
+      "1/25000": "25000",
+      "1/50000": "50000",
+      "1/100000": "100000",
+      "1/200000": "200000",
+      "1/500000": "500000",
+      "1/1000000": "1000000",
+      "1/5000000": "5000000"
+    }
+  },
+  {
+    "id": "select_02",
+    "type": "select",
+    "title": "選択肢２",
+    "list": {
+      "--": "5000000",
+      "1/5000": "5000",
+      "1/10000": "10000",
+      "1/20000": "20000",
+      "1/25000": "25000",
+      "1/50000": "50000",
+      "1/100000": "100000",
+      "1/200000": "200000",
+      "1/500000": "500000",
+      "1/1000000": "1000000",
+      "1/5000000": "5000000"
+    }
+  },
+  {
+    "id": "slider_01",
+    "type": "slider",
+    "title": "スライダー１",
+    "min": 1945,
+    "max": 2022,
+    "default": 1945,
+    "_template": "自{value}年",
+    "newline": true
+  },
+  {
+    "id": "slider_02",
+    "type": "slider",
+    "title": "スライダー２",
+    "min": 1945,
+    "max": 2022,
+    "default": 2022,
+    "_template": "至{value}年",
+    "newline": true
+  },
+  {
+    "id": "text_01",
+    "type": "text",
+    "title": "文字フィルタ",
+    "size": 20,
+    "placeholder": "Text Input",
+    "default": "",
+    "newline": true
+  }
+];
+
+const overlayStyle = {
+  "version": 8,
+  "name": "Vector",
+  "metadata": {
+    "source": {
+      "my-source": {
+        "keyName": "ID", //選択リストに利用するKEYとなる属性値名,
+        "title": "点"
+       },
+      "my-source-2": {
+        "keyName": "referenceNumber", //選択リストに利用するKEYとなる属性値名
+        "title": "線"
+       },
+    }
+  },
+  "sources": {
+    'my-source': {
+      type: 'vector',
+      tiles: ['https://ppmap.github.io/pptest2/xyz/photo/{z}/{x}/{y}.pbf'],
+      minzoom: 6,
+      maxzoom: 11,
+      attribution: "地図・空中写真閲覧サービス"
+    },
+    'my-source-2': {
+      type: 'vector',
+      tiles: ['https://mghs15.github.io/photoPoint2courseLine/photo/{z}/{x}/{y}.pbf'],
+      minzoom: 6,
+      maxzoom: 10,
+      attribution: "地図・空中写真閲覧サービス"
+    }
+  },
+  "layers": [
+    {
+      'metadata': {
+        'isMainLayer': true
+      },
+      'id': 'my-main-layer',
+      'type': 'circle',
+      'source': 'my-source',
+      'minzoom': 11,
+      'maxzoom': 22,
+      'layout': {
+        'visibility': 'visible'
+      },
+      'paint': {
+        'circle-radius': [
+          "interpolate", ["linear"], ["zoom"],
+          11,4,
+          15,8
+        ],
+        'circle-color': ['rgb', 255, 0, 0],
+        'circle-opacity': 1,
+        'circle-stroke-color': ['rgba', 255, 255, 255,1],
+        'circle-stroke-width': 2
+      },
+      'source-layer': 'single'
+    },
+    {
+      'metadata': {
+        'isSelectedLayer': true
+      },
+      'id': 'my-selected-layer',
+      'type': 'circle',
+      'source': 'my-source',
+      'minzoom': 6,
+      'maxzoom': 22,
+      'layout': {
+        'visibility': 'visible'
+      },
+      'paint': {
+        'circle-radius': [
+          "interpolate", ["linear"], ["zoom"],
+          11,5,
+          15,9
+        ],
+        'circle-color': ['rgba', 255, 200, 200, 0],
+        'circle-stroke-color': ['rgba', 255,100,100,1],
+        'circle-stroke-width': 6
+      },
+      'source-layer': 'single'
+    },
+    {
+      'id': 'my-layer-01-sub-01',
+      'type': 'symbol',
+      'source': 'my-source',
+      'minzoom': 13,
+      'maxzoom': 22,
+      'layout': {
+        'text-field': [
+          "case",
+          [">", ["to-number", ["slice", ["get", "date"], 0, 4]], 1900],
+          ["concat", "'", ["slice", ["get", "date"], 2, 4] ],
+          "?"
+        ],
+        'text-size': 12,
+        'text-variable-anchor': ["left", "top", "right", "bottom", "center"],
+        'text-font': ["NotoSansCJKjp-Regular"],
+        'text-allow-overlap': false,
+        'visibility': 'visible'
+      },
+      'paint': {
+        'text-color': ['rgb', 255, 0, 0],
+        'text-halo-color': ['rgba', 255,255,255,1],
+        'text-halo-width': 2
+      },
+      'source-layer': 'single'
+    },
+    {
+      'id': 'my-layer-01-sub-02',
+      'type': 'circle',
+      'source': 'my-source',
+      'minzoom': 6,
+      'maxzoom': 11,
+      'layout': {
+        'visibility': 'visible'
+      },
+      'paint': {
+        'circle-radius': [
+          "interpolate", ["linear"], ["zoom"],
+          11,8,
+          15,12
+        ],
+        'circle-color': ['rgb', 255, 0, 0],
+        'circle-opacity': 0.5,
+        'circle-stroke-color': ['rgba', 255,255,255,1],
+        'circle-stroke-width': 2
+      },
+      'source-layer': 'cluster'
+    },
+    
+    {
+      'metadata': {
+        'isMainLayer': true
+      },
+      'id': 'my-layer-02-main-01',
+      'type': 'line',
+      'source': 'my-source-2',
+      'minzoom': 6,
+      'maxzoom': 15,
+      'layout': {
+        'visibility': 'visible'
+      },
+      'paint': {
+        'line-color': ['rgb', 100, 100, 255],
+        'line-opacity': [
+          "interpolate", ["linear"], ["zoom"],
+          11,0.5,
+          15,0
+        ],
+        'line-width': 4
+      },
+      'source-layer': 'courseline'
+    },
+    {
+      'metadata': {
+        'isSelectedLayer': true
+      },
+      'id': 'my-layer-02-select-01',
+      'type': 'line',
+      'source': 'my-source-2',
+      'minzoom': 6,
+      'maxzoom': 15,
+      'layout': {
+        'visibility': 'visible'
+      },
+      'paint': {
+        'line-color': ['rgb', 0, 0, 255],
+        'line-opacity': 0.5,
+        'line-width': 8
+      },
+      'source-layer': 'courseline'
+    }
+
+  ]
+};
+
+</script>
 </head>
 <body>
 
@@ -104,48 +402,15 @@ button.small {
 <div id='menu'>
 
   <button type="button" class="local" onclick="showFilterSetting()" ><span id="showFilterSettingMode">▼詳細設定を閉じる</span></button>
-  <div id='aco' name='aco'style="display:;">
-  <form name="question" id="question">
+  <div id='aco' name='aco' style="display:block;">
+  <div id="selectOverlay"></div>
+  <div id="question"></div>
   
-    <span>選択肢１：</span>
-    <select name="select_01" onChange="refleshAll();">
-      <option value="0">--</option>
-      <option value="5000">1/5000</option>
-      <option value="10000">1/10000</option>
-      <option value="20000">1/20000</option>
-      <option value="25000">1/25000</option>
-      <option value="50000">1/50000</option>
-      <option value="100000">1/100000</option>
-      <option value="200000">1/200000</option>
-      <option value="500000">1/500000</option>
-      <option value="1000000">1/1000000</option>
-      <option value="5000000">1/5000000</option>
-    </select>
-    
-    <span>選択肢２：</span>
-    <select name="select_02" onChange="refleshAll();">
-      <option value="5000000">--</option>
-      <option value="5000">1/5000</option>
-      <option value="10000">1/10000</option>
-      <option value="20000">1/20000</option>
-      <option value="25000">1/25000</option>
-      <option value="50000">1/50000</option>
-      <option value="100000">1/100000</option>
-      <option value="200000">1/200000</option>
-      <option value="500000">1/500000</option>
-      <option value="1000000">1/1000000</option>
-      <option value="5000000">1/5000000</option>
-    </select>
-    
-    <br>
-    
-    <span>スライダー１：</span><input type="range" id="slider_01" name="slider_01" min="1944" max="2021" value="1945" onChange="refleshAll();"><span id="slider_name_01"></span><br>
-    <span>スライダー２：</span><input type="range" id="slider_02" name="slider_02" min="1944" max="2021" value="2021" onChange="refleshAll();"><span id="slider_name_02"></span><br>
-    
-  </form>
-  
-  <button type="button" class="small" onclick="openOverlayPage()" ><span>リストを表示する</span></button>
-  <button type="button" class="small" onclick="clearList()" ><span>選択したリストをクリア</span></button>
+  <div id="buttuns">
+    <button type="button" class="small" onclick="openOverlayPage()" ><span>リストを表示する</span></button>
+    <button type="button" class="small" onclick="clearList()" ><span>選択したリストをクリア</span></button>
+    <button type="button" class="small" id="switchPhotoRasterButton" ><span>地図/写真切り替え</span></button>
+  </div>
   
   </div><!-- aco -->
   
@@ -157,21 +422,169 @@ button.small {
 <!-------------------------------------------------------------------------->
 
 <div id='overlay-page' name='overlay-page' style="display:none;">
-  <div id="overlay-page-title">リスト</div>
-  <div id="overlay-page-list"></div>
-  <button type="button" class="local" onclick="closeOverlayPage()" ><span>地図に戻る</span></button>
-  <!--
-  <iframe id='overlay-page-iframe' src=""></iframe>
-  -->
+  <div id="overlay-page-header">
+    <div id="overlay-page-title">リスト</div>
+  </div>
+  <div id="overlay-page-main">
+    <div id="overlay-page-list"></div>
+  </div>
+  <div id="overlay-page-footer">
+    <button type="button" class="local" onclick="closeOverlayPage()" ><span>地図に戻る</span></button>
+  </div>
 </div>
 <!-------------------------------------------------------------------------->
 
 <script>
 
 /*************************************************/
-/*Mapbox 関係設定                                */
+/*設定反映                                       */
 /*************************************************/
-const map = new mapboxgl.Map({
+
+const createSlider = s => {
+
+  const parent = document.createElement("div");
+  const labelId = s.id + "-label";
+  
+  //inputのタイトル表示
+  const title = document.createElement("span");
+  title.innerText = s.title + ":";
+  parent.appendChild(title);
+  
+  const slider = document.createElement("input");
+  slider.setAttribute("type", "range");
+  slider.setAttribute("id", s.id);
+  slider.setAttribute("name", s.id);
+  slider.setAttribute("min", s.min);
+  slider.setAttribute("max", s.max);
+  slider.setAttribute("value", s.default);
+  
+  slider.addEventListener("change", () => {refleshAll();} );
+  slider.addEventListener("change", () => {
+    const v = document.getElementById(s.id).value;
+    document.getElementById(labelId).innerHTML = s._template ? s._template.replace(/\{value}/g, v) : v;
+  });
+  
+  parent.appendChild(slider);
+  
+  const label = document.createElement("span");
+  label.setAttribute("id", labelId);
+  
+  label.innerHTML = s._template ? s._template.replace(/\{value}/g, s.default) : s.default;
+  parent.appendChild(label);
+  
+  return parent;
+}
+
+const createSelector = s => {
+
+  const parent = document.createElement("div");
+  
+  //inputのタイトル表示
+  const title = document.createElement("span");
+  title.innerText = s.title + ":";
+  parent.appendChild(title);
+  
+  const select = document.createElement("select");
+  select.setAttribute("id", s.id);
+  select.setAttribute("name", s.id);
+  
+  for(name in s.list){
+    const option = document.createElement("option");
+    option.setAttribute("value", s.list[name]);
+    option.innerText = name;
+    select.appendChild(option);
+  }
+  
+  select.addEventListener("change", () => {refleshAll();} );
+  
+  parent.appendChild(select);
+  
+  return parent;
+
+}
+
+const createTextInput = s => {
+
+  const parent = document.createElement("div");
+  
+  //inputのタイトル表示
+  const title = document.createElement("span");
+  title.innerText = s.title + ":";
+  parent.appendChild(title);
+  
+  const input = document.createElement("input");
+  input.setAttribute("type", "text");
+  input.setAttribute("id", s.id);
+  input.setAttribute("name", s.id);
+  input.setAttribute("size", s.size);
+  input.setAttribute("placeholder", s.placeholder);
+  input.setAttribute("value", s.default);
+  
+  input.addEventListener("change", () => {refleshAll();} );
+  
+  parent.appendChild(input);
+  
+  return parent;
+  
+}
+
+inputSetting.forEach( s => {
+  //表示エリア取得
+  const formArea = document.getElementById("question");
+  
+  if(s.newline) formArea.appendChild(document.createElement("br"));
+  
+  let inputEle;
+  
+  //タイプごとに入力部分の構成
+  switch(s.type){
+    case "slider":
+      inputEle = createSlider(s);
+      break;
+    case "select":
+      inputEle = createSelector(s);
+      break;
+    case "text":
+      inputEle = createTextInput(s);
+      break;
+  }
+  
+  formArea.appendChild(inputEle);
+  
+});
+
+
+//Sourceの数だけチェックボックスを作る。
+for( source in overlayStyle.sources){
+  const formAreaSelectOverlay = document.getElementById("selectOverlay");
+  
+  const parent = document.createElement("div");
+  
+  const input = document.createElement("input");
+  input.setAttribute("name", "selectOverlayCheck");
+  input.setAttribute("type", "checkbox");
+  input.setAttribute("checked", "checked");
+  input.setAttribute("value", source);
+  input.addEventListener("change", () => {selectOverlayLaers();} );
+  parent.appendChild(input);  
+  
+  const title = document.createElement("span");
+  // 本来、source には metadata を記載できないため、以下の処理を修正
+  title.innerText = overlayStyle.sources[source].metadata ? 
+    overlayStyle.sources[source].metadata.title : overlayStyle.metadata.source[source].title;
+  parent.appendChild(title);
+  
+  formAreaSelectOverlay.appendChild(parent);
+}
+
+/*************************************************/
+/*MapLibre+PMTiles 関係設定                      */
+/*************************************************/
+
+let protocol = new pmtiles.Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
+
+const map = new maplibregl.Map({
   container: 'map', // container id
   hash: true, //add #position on URL
   style: './style.json', // stylesheet location
@@ -180,14 +593,14 @@ const map = new mapboxgl.Map({
   minZoom: 6,
   maxZoom: 17.99,
   attributionControl: false,
-  clickTolerance: 10,
+  //clickTolerance: 10,
   localIdeographFontFamily: ['MS Gothic', 'Hiragino Kaku Gothic Pro', 'sans-serif']
 });
 
 
-map.addControl(new mapboxgl.NavigationControl(), 'top-left');
-map.addControl(new mapboxgl.ScaleControl() );
-map.addControl(new mapboxgl.AttributionControl({compact: true}), 'top-right');
+map.addControl(new maplibregl.NavigationControl(), 'top-left');
+map.addControl(new maplibregl.ScaleControl() );
+map.addControl(new maplibregl.AttributionControl({compact: true}), 'top-right');
 
 map.showTileBoundaries = false;
 
@@ -206,7 +619,7 @@ const showFilterSetting = () => {
     element.style.display = "none";
     document.getElementById("showFilterSettingMode").innerText = "▲詳細設定を開く";
   }else{ //開く作業
-    element.style.display = "";
+    element.style.display = "block";
     document.getElementById("showFilterSettingMode").innerText = "▼詳細設定を閉じる";
   }
   
@@ -222,24 +635,17 @@ const showFilterSetting = () => {
 const getInputValues = () => {
   
   //選択肢をまとめて取得する
+  const res = {};
   
-  //選択肢
-  const select_01 = document.question["select_01"] ? document.question["select_01"].value : "";
-  const select_02 = document.question["select_02"] ? document.question["select_02"].value : "";
-  
-  //スライダー
-  const slider_01 = document.question["slider_01"] ? document.question["slider_01"].value : "";
-  const slider_02 = document.question["slider_02"] ? document.question["slider_02"].value : "";
-  if(document.getElementById("slider_name_01")) document.getElementById("slider_name_01").innerText = slider_01;
-  if(document.getElementById("slider_name_02")) document.getElementById("slider_name_02").innerText = slider_02;
-  
-  //結果の返却
-  const res = {
-    "select_01": select_01,
-    "select_02": select_02,
-    "slider_01": slider_01,
-    "slider_02": slider_02
-  }
+  inputSetting.forEach( s => {
+    const id = s.id;
+    const v = "" + document.getElementById(id).value;
+    res[id] = v.replace(/&/g,"&amp;")
+      .replace(/"/g,"&quot;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/'/g, "&#39;");
+  });
   
   return res;
   
@@ -272,23 +678,84 @@ const makeFilter = () => {
     [">=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_01"] ],
     ["<=", ["to-number", ["slice", ["get", "date"], 0, 4]], +inputValues["slider_02"] ]
   ];
+  
+  if(inputValues["text_01"]){
+    const words = inputValues["text_01"].split(/(\s|　)/g);
+    console.log(words);
+    words.forEach( word => {
+      if(word.match(/(\s|　)/)) return;
+      filter.push(["in", word, ["coalesce", ["get", "name"], ""] ]);
+    });
+  }
+  
   return filter;
   
 }
 
 const changeAllStyleFilters = () =>{
   
-  //レイヤへの処理（subも含めて全レイヤへ）
-  map.setFilter('my-main-layer', makeFilter());
-  map.setFilter('my-sub01-layer', makeFilter());
-  map.setFilter('my-sub02-layer', makeFilter());
+  //レイヤへの処理（選択用レイヤを除く全レイヤへ）
+  overlayInfo.overlayAllLayerIdList.forEach( id => {
+    map.setFilter(id, makeFilter());
+  });
+}
+
+
+const selectOverlayLaers = () => {
+  //ソースごとの表示ON・OFF
+  const checkList = document.getElementsByName("selectOverlayCheck");
+  const checkedList = [];
+  checkList.forEach( box => {
+    console.log(box);
+    if(box.checked) checkedList.push(box.value);
+  });
+  
+  //レイヤへの処理（選択用レイヤを除く全レイヤへ）
+  overlayInfo.overlayAllLayerIdList.forEach( id => {
+    
+    const layer = map.getLayer(id);
+    
+    //対象レイヤのSourceがチェックされたリストに入っている。
+    if(layer.source && checkedList.includes(layer.source)){
+      map.setLayoutProperty(id, 'visibility', 'visible');
+    }else{
+      map.setLayoutProperty(id, 'visibility', 'none');
+    }
+  });
+  
 }
 
 /*************************************************/
 /*地図読み込み時の挙動 関係設定                  */
 /*************************************************/
 
+const overlayInfo = {
+  overlayKeyNames: {},
+  overlaySourceIdList: [],
+  overlayMainLayerIdList: [],
+  overlayAllLayerIdList: [] //selectは除く
+};
+
+
 map.on('load', () => {
+  
+  map.addSource('gsi-raster-seamlessphoto', {
+    'type': 'raster',
+    'tiles': ['https://cyberjapandata.gsi.go.jp/xyz/' + 'seamlessphoto' + '/{z}/{x}/{y}.jpg' ],
+    'minzoom': 2,
+    'maxzoom': 18,
+    'tileSize': 256
+  });
+  
+  map.addLayer({
+    'id': 'gsi-raster-seamlessphoto',
+    'type': 'raster',
+    'source': 'gsi-raster-seamlessphoto',
+    'layout': {
+      'visibility': 'none'
+    },
+    'paint': {}
+  });
   
   map.addLayer({
     'id': 'overlay',
@@ -298,90 +765,56 @@ map.on('load', () => {
     }
   });
   
-  map.addSource('my-source', {
-    type: 'vector',
-    tiles: ['https://ppmap.github.io/pptest2/xyz/photo/{z}/{x}/{y}.pbf'],
-    minzoom: 6,
-    maxzoom: 11,
-    attribution: "地図・空中写真閲覧サービス"
-  });
   
-  //メインのレイヤ（クリック時の情報取得などにも利用）
-  map.addLayer({
-    'id': 'my-main-layer',
-    'type': 'circle',
-    'source': 'my-source',
-    'minzoom': 11,
-    'maxzoom': 22,
-    'filter': makeFilter(),
-    'layout': {
-      'visibility': 'visible'
-    },
-    'paint': {
-      'circle-radius': [
-        "interpolate", ["linear"], ["zoom"],
-        11,4,
-        15,8
-      ],
-      'circle-color': ['rgb', 255, 0, 0],
-      'circle-opacity': 1,
-      'circle-stroke-color': ['rgba', 255, 255, 255,1],
-      'circle-stroke-width': 2
-    },
-    'source-layer': 'single'
-  });
+  const el = document.getElementById('switchPhotoRasterButton');
+  if(el){
+    el.addEventListener("click", () => {
+      const vis =  map.getLayoutProperty('gsi-raster-seamlessphoto', 'visibility');
+      
+      if(vis == "none"){
+        map.setLayoutProperty('gsi-raster-seamlessphoto', 'visibility', 'visible');
+      }else{
+        map.setLayoutProperty('gsi-raster-seamlessphoto', 'visibility', 'none');
+      }
+    });
+  }
   
-  //以下は補助用のレイヤ
-  map.addLayer({
-    'id': 'my-sub01-layer',
-    'type': 'symbol',
-    'source': 'my-source',
-    'minzoom': 13,
-    'maxzoom': 22,
-    'filter': makeFilter(),
-    'layout': {
-      'text-field': [
-        "case",
-        [">", ["to-number", ["slice", ["get", "date"], 0, 4]], 1900],
-        ["concat", "'", ["slice", ["get", "date"], 2, 4] ],
-        "?"
-      ],
-      'text-size': 12,
-      'text-variable-anchor': ["left", "top", "right", "bottom", "center"],
-      'text-font': ["NotoSansCJKjp-Regular"],
-      'text-allow-overlap': false,
-      'visibility': 'visible'
-    },
-    'paint': {
-      'text-color': ['rgb', 255, 0, 0],
-      'text-halo-color': ['rgba', 255,255,255,1],
-      'text-halo-width': 2
-    },
-    'source-layer': 'single'
-  });
+  
+  
+  //上乗せデータ用のsourceを順次追加
+  for( id in overlayStyle.sources){
+    map.addSource(id, overlayStyle.sources[id]);
+    overlayInfo.overlaySourceIdList.push(id);
+    // 本来、source には metadata を記載できないため、以下の処理を修正
+    overlayInfo.overlayKeyNames[id] = overlayStyle.sources[id].metadata ? 
+      overlayStyle.sources[id].metadata.keyName : overlayStyle.metadata.source[id].keyName;
+    console.log(`source ${id} を追加`);
+  }
+  
+  //上乗せデータ用のスタイルレイヤを順次追加
+  overlayStyle.layers.forEach( layer => {
+  
+    //選択時の強調用レイヤは除く
+    if(layer.metadata && layer.metadata.isSelectedLayer){
+      return;
+    }
     
+    layer.filter = makeFilter();
+    map.addLayer(layer);
+    overlayInfo.overlayAllLayerIdList.push(layer.id);
+    //メインレイヤは別途取得
+    if(layer.metadata && layer.metadata.isMainLayer) overlayInfo.overlayMainLayerIdList.push(layer.id);
+
+    console.log(`layer "${layer.id}" を追加`);
+    
+  });
+  
   map.addLayer({
-    'id': 'my-sub02-layer',
-    'type': 'circle',
-    'source': 'my-source',
-    'minzoom': 6,
-    'maxzoom': 11,
-    'filter': makeFilter(),
-    'layout': {
-      'visibility': 'visible'
-    },
+    'id': 'overlay-highlight',
+    'type': 'background',
     'paint': {
-      'circle-radius': [
-        "interpolate", ["linear"], ["zoom"],
-        11,8,
-        15,12
-      ],
-      'circle-color': ['rgb', 255, 0, 0],
-      'circle-opacity': 0.5,
-      'circle-stroke-color': ['rgba', 255,255,255,1],
-      'circle-stroke-width': 2
-    },
-    'source-layer': 'cluster'
+      'background-opacity':0 
+    }
   });
   
   refleshAll();
@@ -393,118 +826,156 @@ map.on('load', () => {
 /*地図クリック時の挙動 関係設定                  */
 /*************************************************/
 
+map.on('click', (e) => {
+  openPopupFunc(e);
+  orderListFunc(e);
+});
+
+
+
 //ポップアップ表示 -------------------------------
-const popup = new mapboxgl.Popup();
-map.on('click', function(e) {
+
+const makePopupHtml = (feature) => {
   
+  const prop = feature.properties
+  
+  let htmlString = ""; //ポップアップ
+  let featureProperties = "";
+  for(name in prop){
+    featureProperties = featureProperties + "<tr><td style='vertical-align:top; color:#555555;'>" + name + "</td>"
+                      + "<td style='color:#000000;'>" + prop[name] + "</td></tr>";
+  }
+  htmlString = htmlString + "<table class='popup-table'>" + featureProperties + "</table>";
+  
+  return htmlString;
+  
+}
+
+const popup = new maplibregl.Popup({
+  closeOnClick: false,
+});
+
+
+const openPopupFunc = (e) => {
+
   //初期化
   popup.remove();
   
   //レンダリングされた地物を取得
-  const targetLayers = ['my-main-layer'];
-  const features = map.queryRenderedFeatures(e.point,{layers: targetLayers});
+  const targetLayers = overlayInfo.overlayMainLayerIdList;
+  const sv = 5;
+  const bb = [
+    [e.point.x - sv, e.point.y - sv],
+    [e.point.x + sv, e.point.y + sv]
+  ];
+  const features = map.queryRenderedFeatures(bb, {layers: targetLayers});
   
-  if (!features.length) {
-    popup.remove();
+  if(!features.length) {
     return;
-  }
-  
-  const feature = features[0]; //一番上のものだけ表示
+  } 
   
   //ポップアップ表示処理
-  let htmlString = ""; //ポップアップ
-  let featureProperties = "<table>";
-  for(name in feature.properties){
-    featureProperties = featureProperties + "<tr><td style='vertical-align:top; color:#555555;'>" + name + "</td>";
-    featureProperties = featureProperties + "<td style='color:#000000;'>" + feature.properties[name] + "</td></tr>";
-  }
-  htmlString = htmlString + "</table>" + featureProperties;
+  let htmlString = "";
+  features.forEach( feature => {
+    htmlString = htmlString + makePopupHtml(feature);
+    console.log(feature.properties);
+  });
   
-  if (!htmlString || htmlString == "") {
-    popup.remove();
+  if(!htmlString || htmlString == "") {
     return;
   }
   
   popup.setLngLat([ e.lngLat.lng, e.lngLat.lat ])
     .setHTML(htmlString)
     .addTo(map);
-});
+    
+}
 
 //選択リスト追加 ----------------------------------
 const myList = {};
 const clearList = () => { 
-  for(id in myList){
-    delete myList[id];
-    selectedRefleshFeatures();
+  for(sourceId in myList){
+    for(id in myList[sourceId]){
+      delete myList[sourceId][id];
+      refleshSelectedFeatures(sourceId);
+    }
   }
 }
 
-const selectedRefleshFeatures = () => {
+const refleshSelectedFeatures = (sourceId) => {
   
   const selectedIdList = [];
-  for( id in myList){
+  for(id in myList[sourceId]){
     selectedIdList.push(id);
   }
+  
+  const keyName = overlayInfo.overlayKeyNames[sourceId];
+  console.log(sourceId, keyName);
+  
   const filter = [
     "in",
-    ["get", "ID"],
+    ["get", keyName],
     ["literal", selectedIdList]
   ];
   
-  if(!map.getLayer('my-selected-layer')){
-    map.addLayer({
-      'id': 'my-selected-layer',
-      'type': 'circle',
-      'source': 'my-source',
-      'minzoom': 6,
-      'maxzoom': 22,
-      'filter': filter,
-      'layout': {
-        'visibility': 'visible'
-      },
-      'paint': {
-        'circle-radius': [
-          "interpolate", ["linear"], ["zoom"],
-          11,5,
-          15,9
-        ],
-        'circle-color': ['rgba', 255, 200, 200, 0],
-        'circle-stroke-color': ['rgba', 255,100,100,1],
-        'circle-stroke-width': 6
-      },
-      'source-layer': 'single'
-    }, 'overlay');
+  const selectedLayerId = "_my-selected-layer-" + sourceId;
+  
+  if(!map.getLayer(selectedLayerId)){
+    
+    //上乗せレイヤの中から探してくる
+    overlayStyle.layers.forEach( layer => {
+      if(layer.metadata && layer.metadata.isSelectedLayer && layer.source == sourceId){
+        layer.id = selectedLayerId;
+        layer.filter = filter;
+        console.log(selectedLayerId);
+        map.addLayer(layer, 'overlay-highlight');
+      }
+    });
+    
   }else{
-    map.setFilter('my-selected-layer', filter)
+    map.setFilter(selectedLayerId, filter)
   }
+  
   
 }
 
-map.on('click', function(e) {
+const orderListFunc = (e) => {
+
   //レンダリングされた地物を取得
-  const targetLayers = ['my-main-layer'];
-  const features = map.queryRenderedFeatures(e.point,{layers: targetLayers});
+  const targetLayers = overlayInfo.overlayMainLayerIdList;
+  const sv = 5;
+  const bb = [
+    [e.point.x - sv, e.point.y - sv],
+    [e.point.x + sv, e.point.y + sv]
+  ];
+  const features = map.queryRenderedFeatures(bb, {layers: targetLayers});
   
-  if (!features.length) {
-    popup.remove();
+  if(!features.length) {
     return;
   }
   
-  const feature = features[0]; //一番上のものだけ表示
-  
-  //選択された地物情報をリストに追加
-  if(feature.properties["ID"]){
-    const id = feature.properties["ID"];
-    if(!myList[id]){
-      myList[id] = feature;
-      selectedRefleshFeatures();
-    }else{
-      delete myList[id];
-      selectedRefleshFeatures();
+  features.forEach( feature => {
+    const sourceId = feature.source;
+    const keyName = overlayInfo.overlayKeyNames[sourceId];
+    
+    
+    //選択された地物情報をリストに追加
+    if(feature.properties[keyName]){
+      const id = feature.properties[keyName];
+      if(!myList[sourceId]) myList[sourceId] = {};
+      
+      if(!myList[sourceId][id]){
+        myList[sourceId][id] = feature;
+        refleshSelectedFeatures(sourceId);
+      }else{
+        delete myList[sourceId][id];
+        refleshSelectedFeatures(sourceId);
+        if(popup) popup.remove();
+      }
     }
-  }
+  });
 
-});
+}
 
 
 
@@ -512,29 +983,38 @@ map.on('click', function(e) {
 /*オーバーレイ時の挙動 関係設定                  */
 /*************************************************/
 //別ページ表示
-const openOverlayPage = () =>{
+const makeListHtml = (myList) => {
+
+  let listHtml = "";
+  for(sourceId in myList){
+    for(id in myList[sourceId]){
+      const f = myList[sourceId][id];
+      const prop = f.properties;
+      let propHtml = "| ";
+      for(name in prop){
+        propHtml = propHtml + `${prop[name]}` + " | ";
+      }
+      listHtml = listHtml + "<li>" + propHtml + "</li>";
+    }
+  }
+  
+  listHtml = "<ul>" + listHtml + "</ul>";
+  return listHtml;
+}
+
+const openOverlayPage = () => {
  
   const pageEle = document.getElementById("overlay-page");
   const listEle = document.getElementById("overlay-page-list");
   
-  let listHtml = "";
-  for(id in myList){
-    const f = myList[id];
-    const prop = f.properties;
-    let propHtml = "| ";
-    for(name in prop){
-      propHtml = propHtml + `${prop[name]}` + " | ";
-    }
-    listHtml = listHtml + "<li>" + propHtml + "</li>";
-  };
-  listEle.innerHTML = "<ul>" + listHtml + "</ul>";
+  listEle.innerHTML = makeListHtml(myList);
   
   pageEle.style.display = "";
   console.log(myList);
  
 }
 
-const closeOverlayPage = () =>{
+const closeOverlayPage = () => {
  
   const pageEle = document.getElementById("overlay-page");
   pageEle.style.display = "none";
